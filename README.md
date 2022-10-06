@@ -32,26 +32,37 @@ Note: Many learning materials are learned through Knowledge Planet, welcome to j
 本专栏主要是对知识星球中的一些cv岗位面试会问到的问题的解答。其中很多都是我自己的理解，仅供参考，也欢迎大家指正批评。
 
 [anchor](interview_questions专栏/anchor/第六题.md)关于anchor的一些问题
+
 [dataset](interview_questions专栏/dataset/第一题.md)关于数据集读取的一些问题
+
 [learn_rate](interview_questions专栏/learn_rate/第三题.md)关于学习率的一些问题
+
 [normalization](interview_questions专栏/normalization/第七题.md)关于归一化的一些问题
+
 [one-hot](interview_questions专栏/one-hot/第九题.md)关于独热码的一些问题
+
 [pool](interview_questions专栏/pool/第二题.md)关于池化的一些问题
+
 [pth](interview_questions专栏/pth/第四题.md)关于模型权重的一些问题
+
 [transformer](interview_questions专栏/transformer/第五题.md)关于transformer的一些问题
+
 [underfit_and_overfit](interview_questions专栏/underfit_and_overfitting/第八题.md)关于过拟合和欠拟合的一些问题
 
 ##### paper专栏
 本专栏主要是阅读论文之后记得笔记，之前的看论文很少做笔记，大部分论文都是看过了就忘了，所以在这里想做个积累。
 
 [YOLO](paper专栏/YOLO/yolo.md)关于和YOLO相关的一些笔记
+
 [阅读方法](paper专栏/method.md)关于一些大佬说的阅读论文的方法。
 
 ##### pytorch专栏
 本专栏主要是有关pytorch的学习，主要介绍如何用pytorch搭建甚至优化一个模型。
 
 [cnn_net](pytorch专栏/cnn_net.md)主要是利用pytorch写一个网络模型的类
+
 [dataset](pytorch专栏/dataset.md)主要是用pytorch写dataset类，进行数据读取
+
 [transformer](pytorch专栏/transformer.md)主要是用pytorch搭建transformer模型。
 
 
@@ -59,9 +70,13 @@ Note: Many learning materials are learned through Knowledge Planet, welcome to j
 本专栏主要针对一些有关深度学习的一些切片点进行总结，比如池化的总结，卷积的总结等等。
 
 [CNN_vision](section_summary专栏/CNN_vision/神经网络可视化工具.md)关于cnn模型可视化的工具总结，包括卷积核，热力图，网络结构的可视化
+
 [data_transform](section_summary专栏/data_transform/11.md)关于数据增强的总结，除了pytorch自带的，还有一些各种论文中介绍的
+
 [net_init](section_summary专栏/net_init/init.md)关于网络模型初始化方式的总结
+
 [pyramid_structure](section_summary专栏/pyramid_structure/金字塔结构.md)关于金字塔网络模型的总结
 
-@import "cv.png"
-@import "auto.png"
+<!-- ! [cv技术指南](cv.png) -->
+<!-- @import  "cv.png"
+@import   "auto.png" -->
