@@ -16,19 +16,19 @@ Note: Many learning materials are learned through Knowledge Planet, welcome to j
 本仓库中主要是通过markdown记笔记，每一篇都会生成一张.png的图片，方便通过手机进行复习。下面我将为大家简单介绍一下各个文件夹都包括什么。
 
 
-##### auto_driving专栏
+#### auto_driving专栏
 本专栏主要是有关自动驾驶感知方向的一些笔记，之前的一些笔记都在onenote，所以这里比较空，后面会一点点更新。
 
 [第一章-机器学习](auto_driving专栏/第一章.md)本章主要介绍一些基础的机器学习知识，包括一些线性代数，概率论等。
 
 
-##### competition专栏
+#### competition专栏
 本专栏主要介绍我参加的一些比赛，以及一些我在学习比赛的课程记的笔记
 
 [Kaggle-HubMap](competition专栏/HuBMAP/Match_summary.md)该比赛是一个针对图像分割的比赛，关于多种器官的细胞进行分割的比赛。
 
 
-##### interview_questions专栏
+#### interview_questions专栏
 本专栏主要是对知识星球中的一些cv岗位面试会问到的问题的解答。其中很多都是我自己的理解，仅供参考，也欢迎大家指正批评。
 
 [anchor](interview_questions专栏/anchor/第六题.md)关于anchor的一些问题
@@ -49,14 +49,14 @@ Note: Many learning materials are learned through Knowledge Planet, welcome to j
 
 [underfit_and_overfit](interview_questions专栏/underfit_and_overfitting/第八题.md)关于过拟合和欠拟合的一些问题
 
-##### paper专栏
+#### paper专栏
 本专栏主要是阅读论文之后记得笔记，之前的看论文很少做笔记，大部分论文都是看过了就忘了，所以在这里想做个积累。
 
 [YOLO](paper专栏/YOLO/yolo.md)关于和YOLO相关的一些笔记
 
 [阅读方法](paper专栏/method.md)关于一些大佬说的阅读论文的方法。
 
-##### pytorch专栏
+#### pytorch专栏
 本专栏主要是有关pytorch的学习，主要介绍如何用pytorch搭建甚至优化一个模型。
 
 [cnn_net](pytorch专栏/cnn_net.md)主要是利用pytorch写一个网络模型的类
@@ -66,7 +66,7 @@ Note: Many learning materials are learned through Knowledge Planet, welcome to j
 [transformer](pytorch专栏/transformer.md)主要是用pytorch搭建transformer模型。
 
 
-##### section_summary专栏
+#### section_summary专栏
 本专栏主要针对一些有关深度学习的一些切片点进行总结，比如池化的总结，卷积的总结等等。
 
 [CNN_vision](section_summary专栏/CNN_vision/神经网络可视化工具.md)关于cnn模型可视化的工具总结，包括卷积核，热力图，网络结构的可视化
@@ -77,6 +77,6 @@ Note: Many learning materials are learned through Knowledge Planet, welcome to j
 
 [pyramid_structure](section_summary专栏/pyramid_structure/金字塔结构.md)关于金字塔网络模型的总结
 
-<!-- ! [cv技术指南](cv.png) -->
-<!-- @import  "cv.png"
-@import   "auto.png" -->
+![cv技术指南](https://github.com/mayberpf/cv_learn/blob/main/img/cv.png)
+
+![自动驾驶之心](https://github.com/mayberpf/cv_learn/blob/main/img/auto.png)
