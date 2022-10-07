@@ -66,7 +66,7 @@ Note: Many learning materials are learned through Knowledge Planet, welcome to j
 [transformer](pytorch专栏/transformer.md)主要是用pytorch搭建transformer模型。
 
 
-### section_summary专栏
+# section_summary专栏
 本专栏主要针对一些有关深度学习的一些切片点进行总结，比如池化的总结，卷积的总结等等。
 
 [CNN_vision](section_summary专栏/CNN_vision/神经网络可视化工具.md)关于cnn模型可视化的工具总结，包括卷积核，热力图，网络结构的可视化

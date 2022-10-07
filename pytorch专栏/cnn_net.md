@@ -1,4 +1,4 @@
-#CNN_Net
+# CNN_Net
 要点：
 1、自定义类要继承torch.nn.Module。有时自己设计了一些模块，为了方便使用，通常额外定义一个类，当然也需要继承nn.Module
 2、完成init函数和forward函数，其中init函数完成网络的搭建，forward函数完成网络的前向传播
@@ -33,12 +33,12 @@ for _ in range(1,blocks):
     layers.append(block(self.inplanes,stride,downsample,self.groups,self.basewidth,previousdilation,norm_layer))
 return nn.Sequential(*layers)
 ```
-####forward函数
+#### forward函数
 这里就是前向传播，一般情况都是一路向下，你也可以自己封装一个类，来完成一些金字塔结构都是可以的，如果要可视化特征图，只需要return 该特征图即可
-####初始化网络
+#### 初始化网络
 网络模型初始化要放在init中，分为两类：一类是随机初始化，一类是加载预训练模型
 有关随机初始化之前在net_init中提到过，所以这里重点介绍预训练模型的的加载。
-#####加载预训练模型初始化
+##### 加载预训练模型初始化
 加载预训练模型一般都是在train文件中写，但是有些网络由于是使用现成的backbone网络，因此需要针对backbone加载预训练模型，其他层采用随机初始化的方法，这就需要在网络中定义了。
 最简单的就是直接加载整个模型
 网络的每一层是如何表示的
