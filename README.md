@@ -49,6 +49,8 @@ Note: Many learning materials are learned through Knowledge Planet, welcome to j
 
 [underfit_and_overfit](interview_questions专栏/underfit_and_overfitting/第八题.md)关于过拟合和欠拟合的一些问题
 
+[train_data_set](interview_questions专栏/数据集/数据集.md)关于数据集的注意事项和如何选取合适模型
+
 ### paper专栏
 本专栏主要是阅读论文之后记得笔记，之前的看论文很少做笔记，大部分论文都是看过了就忘了，所以在这里想做个积累。
 

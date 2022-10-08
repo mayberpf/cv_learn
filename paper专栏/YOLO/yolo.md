@@ -141,3 +141,8 @@ Location loss====CIOU loss，只计算正样本的定位损失
 Classes loss 和 Objectness loss ======BCE loss，其中类别损失也只会计算正样本的分类
 Objectness loss是使用所有样本进行反向传播，并且使用的是玩过预测的目标边界框与真实框的CIOU
 
+# 模型部署-ONNX
+可以使用任意一种深度学习的框架来训练网络，然后将模型的结构和参数都转换为一种通用的中间表示，最后使这个中间结构来适应不同的推理引擎。ONNX采用的是protobuf这个序列化数据结构协议来存储神经网络权重信息。protobuf是一种与平台无关，语言无关，可扩展且轻便的搞笑的序列化数据结构的协议，可用于网络通信和数据存储，并且提供了C++，Python的API
+使用netron可以查看ONNX模型转换完后，网络结构是否转换正确。
+关于如何导出YOLOv5的ONNX模型，在GitHub上也有很详细的介绍。
+

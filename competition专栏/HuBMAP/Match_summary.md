@@ -18,6 +18,47 @@ model = net()
 
 
 #### 正文
+首先是一张总结的思维导图
+@import "思维导图.png"
+##### 数据预处理
+对于这次比赛，数据预处理主要针对一下几件事情：
+1、原始图片数据集是3000 *3000的 tiff的格式，需要提交的csv文件中需要将预测的mask图片转成rle编码。所以针对原始图片有切patch的。但是后面发现切patch的效果没有不切的好。所以到后面就不采用切patch的方法，而是使用resize的方法
+2、比赛进行到后面，也有人提供了external data。那个时候我真的已经没怎么关注了这个比赛了。
+##### 数据增强，dataset，DataLoade于二分类和多类分割的都用了这个！
+3、色彩迁移：根据目标图片调整图片的颜色配准
+第二名
+第四名
+##### model
+1、这里有一个库segmentation_models_pytorch
+2、在比赛中还有人使用了mmsegmentation和Detectron等
+3、个人在比赛中对模型的选择调整
+resnet+unet
+efficientnet+unet
+efficientnet+FPN+unet+ASPP
+Swin+upernet
+swin+segformer
+mit_b2+segformer
+第二名
+第四名
+##### loss
+1、使用segmentation_models_pytorch库中的BCEWithLogitsLoss和Dice和TverskyLoss
+2、更改loss函数bce+dice
+3、不平衡处理？
+##### metric
+1、dice
+2、IOU？
+##### train
+1、混合精度训练
+2、单机多卡训练
+##### val&test
+1、result visual于二分类和多类分割的
+2、K-fold Cross Validation
+3、Model Ensemble
+4、Test Time Augmentation
+5、Pseudo label
+第四名
+第二名
+##### 结果后处理
 并没有分patch----因为分辨率只有3000*3000
 但是一开始我们做了切patch
 数据 编码的方式---numpy2rle
