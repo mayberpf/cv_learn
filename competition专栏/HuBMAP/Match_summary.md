@@ -23,6 +23,7 @@ model = net()
 ##### 数据预处理
 对于这次比赛，数据预处理主要针对一下几件事情：
 1、原始图片数据集是3000 *3000的 tiff的格式，需要提交的csv文件中需要将预测的mask图片转成rle编码。所以针对原始图片有切patch的。但是后面发现切patch的效果没有不切的好。所以到后面就不采用切patch的方法，而是使用resize的方法
+
 2、比赛进行到后面，也有人提供了external data。那个时候我真的已经没怎么关注了这个比赛了。
 在看了前几名的代码之后:没有人去分patch。原因可能是因为3000 * 3000并不是很大。
 第二名使用了external data
@@ -47,19 +48,25 @@ def build_transforms(CFG):
 2、多分辨率训练的方案
 因为类别说比较少，这个比赛只有五类，所以在这个比赛中work的效果不是很明显。
 我找了一下代码，发现一个问题，就是实际上在我用的代码中没有使用到多分辨率训练的方案。
+
 3、色彩迁移：根据目标图片调整图片的颜色配准
 color transfering
 vahadane normaization
 传统图像处理？配准？具体了解要去看论文和前几名的代码
+
 第二名
 general：random cropping/padding , scaling , rotating , flipping , color change,亮度增强，随机噪声增强
+
 第四名
 ##### model
 1、这里有一个库segmentation_models_pytorch
 预训练---完形填空===transformer的预训练BERT如何无损的迁移到cv中。
+
 2、在比赛中还有人使用了mmsegmentation和Detectron等
 因为对框架的不够熟悉，所以没有使用。
+
 3、个人在比赛中对模型的选择调整
+
 resnet+unet
 将resnet换为提取特征能力更强的efficientnet-b0到b7（在模型中我只使用了b2，但是肯定是模型越大精确度越高的）
 efficientnet+unet
@@ -74,6 +81,7 @@ mit_b2+segformer
 前面我们先不考虑名词靠前的人的代码是怎么做的，放到最后我们在看模型代码的。
 ##### loss
 1、使用segmentation_models_pytorch库中的BCEWithLogitsLoss和Dice和TverskyLoss
+
 2、更改loss函数为bce+dice，从代码中看，还有一个loss函数是aux_loss，这好像是一个辅助损失，实际上我们损失函数一般都是针对输出计算损失，然后反向传播的。但是这个损失应该是针对某一feature map进行反向传播。有关bce损失函数就说我们熟知的交叉熵损失函数，但是```torch.nn.functional.binary_cross_entropy_with_logits```和```torch.nn.BCEWithLogitsLoss```有啥区别呢？但是我们其实知道就是BCELoss和BCEWithLogitsLoss的区别就是多了一个sigmod的问题。针对Dice损失函数，好像pytorch中没有封装dice损失这个函数吧，但是在segmentation_models_pytorch这个库中实际上是可以调用dice_loss的。
 ```ruby
 import torch.nn.functional as F
