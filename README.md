@@ -51,6 +51,8 @@ Note: Many learning materials are learned through Knowledge Planet, welcome to j
 
 [train_data_set](interview_questions专栏/数据集/数据集.md)关于数据集的注意事项和如何选取合适模型
 
+[nms](interview_questions专栏/nms非极大值抑制/nms非极大值抑制.md)关于非极大值抑制的一些问题，主要包括nms的缺陷和一些优化的方法。
+
 ### paper专栏
 本专栏主要是阅读论文之后记得笔记，之前的看论文很少做笔记，大部分论文都是看过了就忘了，所以在这里想做个积累。
 
@@ -79,6 +81,11 @@ Note: Many learning materials are learned through Knowledge Planet, welcome to j
 
 [pyramid_structure](section_summary专栏/pyramid_structure/金字塔结构.md)关于金字塔网络模型的总结
 
+# Code专栏
+这里主要放一些网络结构模型，以及一些代码。光有理论，没有代码可不行。
+
 ![cv技术指南](https://github.com/mayberpf/cv_learn/blob/main/img/cv.png)
 
 ![自动驾驶之心](https://github.com/mayberpf/cv_learn/blob/main/img/auto.png)
+
+

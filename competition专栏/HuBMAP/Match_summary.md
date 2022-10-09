@@ -24,25 +24,92 @@ model = net()
 对于这次比赛，数据预处理主要针对一下几件事情：
 1、原始图片数据集是3000 *3000的 tiff的格式，需要提交的csv文件中需要将预测的mask图片转成rle编码。所以针对原始图片有切patch的。但是后面发现切patch的效果没有不切的好。所以到后面就不采用切patch的方法，而是使用resize的方法
 2、比赛进行到后面，也有人提供了external data。那个时候我真的已经没怎么关注了这个比赛了。
+在看了前几名的代码之后:没有人去分patch。原因可能是因为3000 * 3000并不是很大。
+第二名使用了external data
 ##### 数据增强，dataset，DataLoade于二分类和多类分割的都用了这个！
+1、使用albumentations库，这个库的官网：https://albumentations.ai/docs/ 从代码中可以看出来，这里使用的数据增强按照train和val分为了两部分，train部分从resize和horizontalFlip选一个进行。只是一开始使用这个库的数据增强，后来就没有使用了，而是使用青蛙哥写的数据增强的代码。
+```r
+import albumentation as A
+def build_transforms(CFG):
+    data_transforms = {
+        "train": A.Compose([
+            A.OneOf([
+                A.Resize(*CFG.img_size, interpolation=cv2.INTER_NEAREST, p=1.0),
+            ], p=1),
+            A.HorizontalFlip(p=0.5),
+            ], p=1.0),
+        "valid_test": A.Compose([
+            A.Resize(*CFG.img_size, interpolation=cv2.INTER_NEAREST),
+            ], p=1.0)
+        }
+    return data_transforms
+```
+2、多分辨率训练的方案
+因为类别说比较少，这个比赛只有五类，所以在这个比赛中work的效果不是很明显。
+我找了一下代码，发现一个问题，就是实际上在我用的代码中没有使用到多分辨率训练的方案。
 3、色彩迁移：根据目标图片调整图片的颜色配准
+color transfering
+vahadane normaization
+传统图像处理？配准？具体了解要去看论文和前几名的代码
 第二名
+general：random cropping/padding , scaling , rotating , flipping , color change,亮度增强，随机噪声增强
 第四名
 ##### model
 1、这里有一个库segmentation_models_pytorch
+预训练---完形填空===transformer的预训练BERT如何无损的迁移到cv中。
 2、在比赛中还有人使用了mmsegmentation和Detectron等
+因为对框架的不够熟悉，所以没有使用。
 3、个人在比赛中对模型的选择调整
 resnet+unet
+将resnet换为提取特征能力更强的efficientnet-b0到b7（在模型中我只使用了b2，但是肯定是模型越大精确度越高的）
 efficientnet+unet
+但是特征能力仍然不足，所以在efficientnet和unet中间插入FPN结构，为了让每个pexi学到的感受野更大，在网络模型的最后加入了ASPP的模块
 efficientnet+FPN+unet+ASPP
+为进一步提高特征的提取，重新替换encoder和decoder
 Swin+upernet
+将upernet替换为基于transformer的分割模型segformer
 swin+segformer
+理论上这个模型的效果应该很好，但是在我实验中，实际上效果并不是很好，因此我将encoder部分换成了mit-b2
 mit_b2+segformer
-第二名
-第四名
+前面我们先不考虑名词靠前的人的代码是怎么做的，放到最后我们在看模型代码的。
 ##### loss
 1、使用segmentation_models_pytorch库中的BCEWithLogitsLoss和Dice和TverskyLoss
-2、更改loss函数bce+dice
+2、更改loss函数为bce+dice，从代码中看，还有一个loss函数是aux_loss，这好像是一个辅助损失，实际上我们损失函数一般都是针对输出计算损失，然后反向传播的。但是这个损失应该是针对某一feature map进行反向传播。有关bce损失函数就说我们熟知的交叉熵损失函数，但是```torch.nn.functional.binary_cross_entropy_with_logits```和```torch.nn.BCEWithLogitsLoss```有啥区别呢？但是我们其实知道就是BCELoss和BCEWithLogitsLoss的区别就是多了一个sigmod的问题。针对Dice损失函数，好像pytorch中没有封装dice损失这个函数吧，但是在segmentation_models_pytorch这个库中实际上是可以调用dice_loss的。
+```ruby
+import torch.nn.functional as F
+import segmentation_models_pytorch as smp
+Dice_loss = smp.losses.DiceLoss(mode='binary')
+#在net中调用损失函数，这里省略了一些细节
+class Net(nn.Module):
+	def load_pretrain( self,):
+        pass
+	def __init__( self,):
+		super(Net, self).__init__()
+        pass
+	def forward(self, batch):
+        output = {}
+        if 'loss' in self.output_type:
+            output['bce_loss'] = F.binary_cross_entropy_with_logits(logit,batch['mask'])
+            output['dice_loss'] = Dice_loss(logit,batch['mask'])
+            for i in range(4):
+                output['aux%d_loss'%i] = criterion_aux_loss(self.aux[i](encoder[i]),batch['mask'])
+        if 'inference' in self.output_type:
+            output['probability'] = torch.sigmoid(logit)
+        return output
+
+def criterion_aux_loss(logit, mask):
+	mask = F.interpolate(mask,size=logit.shape[-2:], mode='nearest')
+	loss = F.binary_cross_entropy_with_logits(logit,mask)
+	return loss
+#训练函数中调用模型，并且提取损失函数，将损失函数求和并做反向传播
+output = net(batch)#这里的output只有loss
+loss0  = output['bce_loss'].mean()
+loss1  = output['aux2_loss'].mean()
+loss2 = output['dice_loss'].mean()
+
+optimizer.zero_grad()
+scaler.scale(0.5*loss0+0.2*loss1+0.5*loss2+0.2*loss1).backward()#============这里改了loss函数
+```
 3、不平衡处理？
 ##### metric
 1、dice
@@ -72,7 +139,7 @@ albumentations 库
 这里没有做
 
 lib：segmentation_model_pytorch as smp
-预训练---完形填空
+
 
 timm库
 第二名的代码要看？？？60个模型？
