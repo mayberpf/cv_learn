@@ -52,7 +52,9 @@ def build_transforms(CFG):
 3、色彩迁移：根据目标图片调整图片的颜色配准
 color transfering
 vahadane normaization
-传统图像处理？配准？具体了解要去看论文和前几名的代码
+传统图像处理？配准？具体了解要去看论文和前几名的代码 
+
+4、这里有人使用了cutmix或者cutout，看讨论区说是这种数据增强是可以涨点的，但是其实根据实际的理论分析，其实应该是不work的，甚至会降低整体的精确度。也就是这两个数据增强实际上主要是针对目标检测进行的。
 
 第二名
 general：random cropping/padding , scaling , rotating , flipping , color change,亮度增强，随机噪声增强
@@ -63,7 +65,7 @@ general：random cropping/padding , scaling , rotating , flipping , color change
 预训练---完形填空===transformer的预训练BERT如何无损的迁移到cv中。
 
 2、在比赛中还有人使用了mmsegmentation和Detectron等
-因为对框架的不够熟悉，所以没有使用。
+因为对框架的不够熟悉，所以没有使用。也是希望通过学习到网络的原始结构。
 
 3、个人在比赛中对模型的选择调整
 
@@ -119,74 +121,316 @@ optimizer.zero_grad()
 scaler.scale(0.5*loss0+0.2*loss1+0.5*loss2+0.2*loss1).backward()#============这里改了loss函数
 ```
 3、不平衡处理？
+没有人使用，首先了解一下什么是不平衡loss，实际上就是针对数据集不平衡分布的loss函数，那么比赛中为什么没人使用就明白了，本次比赛的数据集不过才10个G，而且类别数也才五类，每个类分别均衡，不过就是存在不同类的识别难易程度不一致。所以也就不存在什么数据分布不平衡。针对不平衡loss主要使用的是Focal loss。Focal loss主要是为了解决one-stage目标检测中正负样本比例严重失衡的问题。该损失函数降低了大量简单负样本在训练中所占的权重，也可理解为一种困难样本挖掘。
 ##### metric
 1、dice
-2、IOU？
+有关这个评价指标的函数，大家使用的都是基本一样的，我看了下代码，dice函数实际上就是真实值的交集*2除以真实值的并集。接下来详细的看一下有关这两个指标的的区别和联系。dice和iou实际上都是衡量两个集合之间的相似性的度量。
+@import "dice.png"
+@import "iou.png"
+```ruby
+def compute_dice_score(probability, mask):
+    N = len(probability)
+    p = probability.reshape(N,-1)
+    t = mask.reshape(N,-1)
+    p = p>0.5
+    t = t>0.5
+    uion = p.sum(-1) + t.sum(-1)
+    overlap = (p*t).sum(-1)
+    dice = 2*overlap/(uion+0.0001)
+    return dice
+```
+2、IOU
+评价指标实际上就是在这两个中选择，所以我用了dice就没有再使用iou
 ##### train
 1、混合精度训练
+在pytorch的tensor中，默认训练的数据类型是float32，神经网络训练过程中，网络权重以及其他参数，默认数据类型都是float32，即单精度，为了节省内存，部分操作既有float32又有float16，因此叫做混合精度训练。
+pytorch中是自动混合精度训练，使用 torch.cuda.amp.autocast 和 torch.cuda.amp.GradScaler 这两个模块。
+torch.cuda.amp.autocast：在选择的区域中自动进行数据精度之间的转换，即提高了运算效率，又保证了网络的性能。
+torch.cuda.amp.GradScaler：来解决数据溢出问题，即数据溢出问题：Overflow / Underflow
+有关混合精度训练的使用
+```ruby
+import torch.cuda.amp as amp
+scaler = amp.GradScaler(enabled = is_amp)#自动混合精度，节省显 存并加快推理速度  scaler用于精度调节
+net = Net().cuda()
+net.train()
+with amp.autocast(enabled = is_amp):
+    # pdb.set_trace()
+    output = net(batch)#这里的output只有loss
+    loss0  = output['bce_loss'].mean()
+    loss1  = output['aux2_loss'].mean()
+    loss2 = output['dice_loss'].mean()
+
+optimizer.zero_grad()
+scaler.scale(0.5*loss0+0.2*loss1+0.5*loss2+0.2*loss1).backward()#============这里改了loss函数
+scaler.unscale_(optimizer)
+scaler.step(optimizer)
+scaler.update()
+```
 2、单机多卡训练
+```ruby
+torch.nn.DataParallel
+```
 ##### val&test
 1、result visual于二分类和多类分割的
+这里只是拿出了可视化的一个函数，主要问题实际上就是需要在哪个位置调用这个函数，以及注意这个函数的输入shape值，如果将其转换成plt想要的数据类型。然后可视化。还有一个问题就是，我有一个其他的模型在添加了可视化代码只有，发现明显运行速度会降低，也就是在运行时，会有内存的占用。所以我们需要注意把没用的删除掉。这也是我在这次比赛中学到的东西```del state_dict#？？？啥意思------删除的的意思```。在本次比赛中呢，我的可视化基本没怎么使用，原因是一开始就不太懂，后面就明白了一个道理，就是这个可视化模块应该在一开始就添加到代码中，在val中调用这个函数，这样我们就可以了解到网络模型在学习的过程中有哪些问题。方便以后代码的改进。我是在最后一部分才添加了可视化代码，但是是在test中添加的，这就犯了一个大错，比赛中测试图片只有一张，并且没有真实值可以对比，所以可视化意义并不大。后来我意识到这一点之后，我尝试将训练的图片放在test的文件夹中，但也就是几张的可视化。所以在本次比赛中，可视化做的并不是很好，我会予以重视，尤其在后面一些项目中。
+```ruby
+def plot_visual(image, mask, pred, image_id, cmap):
+    plt.figure(figsize=(16, 10))
+
+    plt.subplot(1, 3, 1)
+    plt.imshow(image.transpose(1, 2, 0))
+    plt.grid(visible=False)
+    plt.title("image", fontsize=10)
+    plt.axis("off")
+
+    plt.subplot(1, 3, 2)
+    plt.imshow(image.transpose(1, 2, 0))
+    plt.imshow(mask.transpose(1, 2, 0), cmap=cmap, alpha=0.5)
+    plt.title(f"mask", fontsize=10)    
+    plt.axis("off")
+    
+    plt.subplot(1, 3, 3)
+    plt.imshow(image.transpose(1, 2, 0))
+    plt.imshow(pred.transpose(1, 2, 0), cmap=cmap, alpha=0.5)
+    plt.title(f"pred", fontsize=10)    
+    plt.axis("off")
+
+    plt.savefig(f"./result/{image_id}")
+    # plt.show()
+```
 2、K-fold Cross Validation
+K-fold交叉验证，是我在这个比赛中学到的第一个东西。一开始我们都是知道数据集的划分，也就是我们会将数据集划分为训练集、验证集、测试集。那么在k-fold中就是将数据分为n个部分，进行n次训练，每次训练都选择不同的部分作为验证集。那么在测试的时候应该怎么做呢，就是n次训练我们会产生n个权重，那么就需要把n个权重全部加载进来。进行n次测试，然后将每次的预测值求其平均值，就是最后的预测结果。有一个张图可以很好的说明这个事情。
+@import "k-fold.png"
+这个是基操，老师说的。我的模型私榜成绩能提升20名我估计这个trick做了很大贡献，还有后面的tta。
+```ruby
+from sklearn.model_selection import KFold
+train_df, valid_df = make_fold(fold)
+train_dataset = HubmapDataset(train_df, train_augment5b)
+valid_dataset = HubmapDataset(valid_df, valid_augment5)
+
+def make_fold(fold=0):
+    # df = pd.read_csv('../input/hubmap-organ-segmentation/train.csv')
+    df = pd.read_csv('/home/ktd/rpf_ws/HuBMAP/Code/input/hubmap-2022-256x256/train.csv')
+    num_fold = 4
+    skf = KFold(n_splits=num_fold, shuffle=True,random_state=42)#实例化，4fold，随机打乱，随机种子数
+    df.loc[:,'fold']=-1#???给df增加一列，声明第几个fold，初始均为-1
+    for f,(t_idx, v_idx) in enumerate(skf.split(X=df['id'], y=df['organ'])):#这里应该是根据id和orgam进行划分
+    #这里根据器官，可以理解为每个fold都有一定的不同器官的图片。
+        df.iloc[v_idx,-1]=f#新添加的一列确定验证时为哪个fold，因为除去验证，其他的都是训练。所以只需要确定验证的fold即可。
+    train_df=df[df.fold!=fold].reset_index(drop=True)
+    #df[df.fold!=fold]将fold的值变为T or F 、reset_index(drop=T)从新排序，之前的index去掉
+    valid_df=df[df.fold==fold].reset_index(drop=True)
+    return train_df,valid_df
+
+```
 3、Model Ensemble
+有关模型的融合，说实话，我还不是很了解，但是在比赛过程中，我确实想过通过不同的模型对图片进行预测，最后求个平均值就可以。但是不太会做。这次比赛中，真正运用到的是，一个模型在训练时使用交叉验证产生的不同的权重文件，加载到模型，进行预测，最后求其平均值。但是这所有的权重都是一个网络模型的权重。我还是很想知道别人不同网络结构的模型是怎么融合到一起的。
+下面是针对多个权重文件（相同的网络模型）的模型的融合和预测的代码：
+```ruby
+for path in MODELS:#MODELS是一个列表，这里存放了各个权重存放的地址
+    state_dict = torch.load(path,map_location=torch.device(device))
+    if Ensemble_Weight:#这个是在加载不同pth文件时，我们可以通过设置他们的文件名，来确定不同pth所占比的权重，之后我也尝试了。
+        score = extract_model_score(path)
+    else:
+        score = 1
+    all_score += score
+    # model = Net(config=config()).to(device)
+    model = Net().to(device)
+    model.load_state_dict(state_dict["state_dict"])
+    model.float()
+    model.eval()
+    model.to(device)
+    models.append((model, score))
+```
 4、Test Time Augmentation
+tta根据名字，首先了解到这是一个在测试时使用的数据增强。方法：测试时将原始数据做不同形式的增强，然后取结果的平均值作为最终结果。
+作用：可以进一步提升最终结果的精度。
+到这里我们很容易理解，像图像分类，图像分割，但是对于目标检测这个任务，还是那个问题，当图片进行旋转翻转，甚至裁剪等操作时，bbox应该如何变换，一定是有方法可以完成这个的，这也是我应该去学习的。当然在这次比赛中的tta的使用，我没有对其进行非常复杂的改变，而是简单的更改数据增强的方式。
+```ruby
+if self.tta:
+    # x,y,xy flips as TTA
+    flips = [[-1], [-2], [-2, -1]]#flip按照维度进行反转
+    for f in flips:
+        xf = torch.flip(x, f)#torch.flip(变量，dim)
+        for model, score in self.models:#因为多个权重，所以每个权重都要加载进来预测。这里的score是各个权重占比的分数。
+            p = model(xf)
+            p = torch.flip(p, f)#预测完之后，再做一次翻转，得到原图的的预测结果
+            py += p * score / self.all_score
+    # pdb.set_trace()
+    py /= (1 + len(flips))#一张图片实际预测了四组模型==这里的的1是因为上面还有一层对于原始图片的预测。
+```
+但是我查资料发现，实际上tta也是可以进行调用的。
+```ruby
+from pytorch_toolbelt.inference import tta
+```
 5、Pseudo label
-第四名
-第二名
+一种简单高效的深度神经网络半监督学习方法。思想：将带标签和无标签的数据同时训练的监督方式。对于未标记的数据，伪标记，只是选取具有最大预测概率的类，当做他们是真实的标签一样使用。这实际上相当于熵正则化。倾向于类与类之间的低密度间隔。
+
 ##### 结果后处理
-并没有分patch----因为分辨率只有3000*3000
-但是一开始我们做了切patch
-数据 编码的方式---numpy2rle
-第二名用了external data 但是应该美起到什么作用
+本次比赛，实际上并没有使用什么后处理的方法。但是在课程中老师也提到了几个后处理方法。但是都没有使用，并且我自己本身不太了解，后续会继续学习补充。
+1、CRF--condition random field
+2、分水岭算法
+步骤：将图像的所有像素按像素值从小到大排序，这里可以利用直方图将像素信息塞入数组。开始按灰度级从小到大顺序遍历所有像素，先将该灰度级的全部像素标记为待计算点。若点的邻域内有已存在的水池，则放入一个队列（先将水池边缘像素入队）。开始遍历队列，直到队列为空。开始计算下一个灰度级。参考：http://t.csdn.cn/embNg
 
-transformer，dataset，dataloader
-albumentations 库
-手写的数据增强---
-色彩迁移：根据目标图片调整图片的颜色特征   hsv
+### 针对前几名的分析
+关于第二名，实际上第二名的代码看下来让我感触最深的就是模型的使用，难以想象他用了那么多模型，就是一开始在群里有人调侃使用了60个模型，我还觉着说着玩，现在看来确实是这样。还有就是感触很深的事情是，timm的这个库，确实对于一些比赛来说真的很重要。而且在csdn上去搜一些讲解，但是不多甚至很少，这个时候我想大家都会知道官方文档的重要性了吧。看了他的代码只有我也是对于模型融合有了更深一层的认识了。首先让我们来看代码
+```ruby
+#这是加载的一些参数，很明显可以看到，三个size的大小也就是他训练会分成了三个size，其实768，1024我们都可以理解，1472并不是32的倍数。那为什么选择这个大小呢。（因为size是32的倍数会提高训练计算的效率）。可能是因为图片太大，显存就不够了吧。其次可以看到就是不同size包含了多个模型，举个例子：768的size包含了('tf_efficientnet_b7_ns', 'tf_efficientnet_b7_ns_768_e34_{}_best', models_folder, 1), 这里，'tf_efficientnet_b7_ns'这是timm库调用模型时需要的模型的名字, 'tf_efficientnet_b7_ns_768_e34_{}_best'这个是后面加载权重文件的名字, models_folder这个是权重文件存储的地址, 1这个是模型所占的权重)。接下来就是加载模型，我当时还在好奇那么多self.conv是啥意思，那就是这个模型并没有把decoder封装起来，也就是后面很多的self.conv就是unet，其实也可能是因为unet需要encoder中某些层的输出来cat，所以并没有封装。
+params = [
+    {'size': (768, 768), 'models': [
+                                    ('tf_efficientnet_b7_ns', 'tf_efficientnet_b7_ns_768_e34_{}_best', models_folder, 1), 
+                                    ('convnext_large_384_in22ft1k', 'convnext_large_384_in22ft1k_768_e37_{}_best', models_folder, 1),
+                                    ('tf_efficientnetv2_l_in21ft1k', 'tf_efficientnetv2_l_in21ft1k_768_e36_{}_best', models_folder, 1), 
+                                    ('coat_lite_medium', 'coat_lite_medium_768_e40_{}_best', models_folder2, 3),
+                                   ],
+                         'pred_dir': 'test_pred_768', 'weight': 0.2},
+    {'size': (1024, 1024), 'models': [
+                                      ('convnext_large_384_in22ft1k', 'convnext_large_384_in22ft1k_1024_e32_{}_best', models_folder2, 1), 
+                                      ('tf_efficientnet_b7_ns', 'tf_efficientnet_b7_ns_1024_e33_{}_best', models_folder, 1),
+                                      ('tf_efficientnetv2_l_in21ft1k', 'tf_efficientnetv2_l_in21ft1k_1024_e38_{}_best', models_folder, 1),
+                                    ('coat_lite_medium', 'coat_lite_medium_1024_e41_{}_best', models_folder, 3),
+                                   ],
+                         'pred_dir': 'test_pred_1024', 'weight': 0.3},
+    {'size': (1472, 1472), 'models': [
+                                    ('tf_efficientnet_b7_ns', 'tf_efficientnet_b7_ns_1472_e35_{}_best', models_folder, 1),
+                                    ('tf_efficientnetv2_l_in21ft1k', 'tf_efficientnetv2_l_in21ft1k_1472_e39_{}_best', models_folder, 1),
+                                    ('coat_lite_medium', 'coat_lite_medium_1472_e42_{}_best', models_folder2, 3),
+                                   ],
+                         'pred_dir': 'test_pred_1472', 'weight': 0.5},
+]
 
-这里没有做
+class Timm_Unet(nn.Module):
+    def __init__(self, name='resnet34', pretrained=True, inp_size=3, otp_size=1, decoder_filters=[32, 48, 64, 96, 128], **kwargs):
+        super(Timm_Unet, self).__init__()
 
-lib：segmentation_model_pytorch as smp
+        if name.startswith('coat'):
+            #因为其他模型都是基于cnn的，但是coat实际上是基于transformer的，所以它的encoder要另外加载
+            encoder = coat_lite_medium()
 
+            if pretrained:
+                checkpoint = './weights/coat_lite_medium_384x384_f9129688.pth'
+                checkpoint = torch.load(checkpoint, map_location=lambda storage, loc: storage)
+                state_dict = checkpoint['model']
+                encoder.load_state_dict(state_dict,strict=False)
+        
+            encoder_filters = encoder.embed_dims
+        else:
+            encoder = timm.create_model(name, features_only=True, pretrained=pretrained, in_chans=inp_size)##features_only模型用作特征处理器
+            #这里timm的库真的值得去花时间学习。
+            encoder_filters = [f['num_chs'] for f in encoder.feature_info]
+            #这一步的作用应该是获取encoder中每一层的输出通道数。方便后面做decoder的unet进行拼接前面和后面的特征图
 
-timm库
-第二名的代码要看？？？60个模型？
+        decoder_filters = decoder_filters#这是decoder的每一层的通道数
 
-第四名
-对于难识别的类
-没开元？
+        self.conv6 = ConvSilu(encoder_filters[-1], decoder_filters[-1])
+        self.conv6_2 = ConvSilu(decoder_filters[-1] + encoder_filters[-2], decoder_filters[-1])
+        self.conv7 = ConvSilu(decoder_filters[-1], decoder_filters[-2])
+        self.conv7_2 = ConvSilu(decoder_filters[-2] + encoder_filters[-3], decoder_filters[-2])
+        self.conv8 = ConvSilu(decoder_filters[-2], decoder_filters[-3])
+        self.conv8_2 = ConvSilu(decoder_filters[-3] + encoder_filters[-4], decoder_filters[-3])
+        self.conv9 = ConvSilu(decoder_filters[-3], decoder_filters[-4])
 
-使用框架
+        if len(encoder_filters) == 4:
+            self.conv9_2 = None
+        else:
+            self.conv9_2 = ConvSilu(decoder_filters[-4] + encoder_filters[-5], decoder_filters[-4])
+        
+        self.conv10 = ConvSilu(decoder_filters[-4], decoder_filters[-5])
+        
+        self.res = nn.Conv2d(decoder_filters[-5], otp_size, 1, stride=1, padding=0)
 
-自己用了非常重的encoder
+        self.cls =  nn.Linear(encoder_filters[-1] * 2, 5)
+        self.pix_sz =  nn.Linear(encoder_filters[-1] * 2, 1)
 
-loss---nn.bce
-diceloss
+        self._initialize_weights()
 
-第二名
-px_size
-目标检测
-多任务loss
+        self.encoder = encoder
 
-metric
-dice，iou
+    def forward(self, x):
+        batch_size, C, H, W = x.shape
 
-train_one_epoch
+        if self.conv9_2 is None:
+            enc2, enc3, enc4, enc5 = self.encoder(x)
+        else:
+            enc1, enc2, enc3, enc4, enc5 = self.encoder(x)
 
-test_one_epoch
-trick
-    k-fold
-    model-ensemble
-    tta
-    pseudo label
-    stain normalization
+        dec6 = self.conv6(F.interpolate(enc5, scale_factor=2))
+        dec6 = self.conv6_2(torch.cat([dec6, enc4
+                ], 1))
 
-后处理算法
-    CRF
-    分水岭
+        dec7 = self.conv7(F.interpolate(dec6, scale_factor=2))
+        dec7 = self.conv7_2(torch.cat([dec7, enc3
+                ], 1))
+        
+        dec8 = self.conv8(F.interpolate(dec7, scale_factor=2))
+        dec8 = self.conv8_2(torch.cat([dec8, enc2
+                ], 1))
 
+        dec9 = self.conv9(F.interpolate(dec8, scale_factor=2))
 
-简历书写
+        if self.conv9_2 is not None:
+            dec9 = self.conv9_2(torch.cat([dec9, 
+                    enc1
+                    ], 1))
+        
+        dec10 = self.conv10(dec9) # F.interpolate(dec9, scale_factor=2))
+
+        x1 = torch.cat([F.adaptive_avg_pool2d(enc5, output_size=1).view(batch_size, -1), 
+                        F.adaptive_max_pool2d(enc5, output_size=1).view(batch_size, -1)], 1)
+
+        # x1 = F.dropout(x1, p=0.3, training=self.training)
+        organ_cls = self.cls(x1)
+        pixel_size = self.pix_sz(x1)
+
+        return self.res(dec10), organ_cls, pixel_size
+models = []
+for model_name, checkpoint_name, checkpoint_dir, model_weight in param['models']:
+    for fold in range(5):
+        model = Timm_Unet(name=model_name, pretrained=None)
+        #到这里模型的整体结构就已经进来了，后面就是顺序加载模型的权重，然后将起放入列表models中
+        snap_to_load = checkpoint_name.format(fold)
+        print("=> loading checkpoint '{}'".format(snap_to_load))
+        checkpoint = torch.load(path.join(checkpoint_dir, snap_to_load), map_location='cpu')
+        loaded_dict = checkpoint['state_dict']
+        sd = model.state_dict()
+        for k in model.state_dict():
+            if k in loaded_dict:
+                sd[k] = loaded_dict[k]
+        loaded_dict = sd
+        model.load_state_dict(loaded_dict)
+        print("loaded checkpoint '{}' (epoch {}, best_score {})".format(snap_to_load, 
+            checkpoint['epoch'], checkpoint['best_score']))
+        model = model.eval().cuda()
+
+        models.append((model, model_weight))
+#后面的预测环节就不写了，实际上就是把列表中的模型一个个取出来，然后将进行了tta的数据放入到模型中，最后得到输出。
+```
+这就是第二名的代码，其他方面基本没有什么区别。对还有一个点实际上我不太明白，就是看了他的代码，他在数据进行预处理方面有一个函数，我不太懂。他对图像进行resize之后又进行了一个这个操作。我尝试性的搜了一下，真的有人说，也就是这个作者并没有将图片像素值取[0,1]而是选择了[-1,1]？目前我是这样理解的，但是不知道它的优势是啥。
+```ruby
+#这是源码中每个模式不同的处理方式，可以看到’caffe’使用的为居中化，而 torch 与’tf’模式均为标准化，不同的在于 torch 操作为 x/255, 最后得到 [0-1] 的图像值，'tf’格式的操作为 x/=127.5，x-=1，最后得到的是 [-1,1] 范围的图像，如果在构建自己模型时，不用此函数按照源码对图像进行处理也是可以的。
+参考：http://t.csdn.cn/t1ALd
+```
+```ruby
+def preprocess_inputs(x):
+    x = np.asarray(x, dtype='float32')
+    x /= 127
+    x -= 1
+    return x
+```
+当然，第二名还有其他一些优化，比如他提供了一个额外的数据集、伪标签(代码中没看到，但是他自己说使用了)等。
+后续有时间我还会多去看其他人的代码。
+
+### 简历书写提示
+简历写一些解决方案
+数据集是什么，目的是什么
+transformer模型
+数据增强用了什么
+从分辨率，以病理颜色增强，自适应的？？大小的数据增强。
+采用？？？model
+采用？？？loss===>如果你写了focal loss,面试会问为什么选择focal loss，举个例子哪个类占得比例低，你的系数是怎么调的？
+tta
+伪标签
+后处理
 数据集--->transformer--->
 数据集是什么+增强+模型+loss+推理+指标
 +个人博客地址
@@ -196,8 +440,6 @@ github repo
 每个项目都要有描述自己做了什么
 数据集有多少张，最终的metric多少
 
-cutmix？？
 目标检测很有用？
 写一些你懂的，有把握的，不要写有歧义的
-cutout？？？
-
+出生年月？籍贯？政治面貌？计算机二级？===不需要
