@@ -53,6 +53,8 @@ Note: Many learning materials are learned through Knowledge Planet, welcome to j
 
 [nms](interview_questions专栏/nms非极大值抑制/nms非极大值抑制.md)关于非极大值抑制的一些问题，主要包括nms的缺陷和一些优化的方法。
 
+[net_design](interview_questions专栏/net_design/net_design.md)关于我们自己在设计改进网络结构时候需要注意的点
+
 ### paper专栏
 本专栏主要是阅读论文之后记得笔记，之前的看论文很少做笔记，大部分论文都是看过了就忘了，所以在这里想做个积累。
 
@@ -81,9 +83,15 @@ Note: Many learning materials are learned through Knowledge Planet, welcome to j
 
 [pyramid_structure](section_summary专栏/pyramid_structure/金字塔结构.md)关于金字塔网络模型的总结
 
+[nms非极大值抑制](section_summary专栏/nms非极大值抑制/nms.md)关于非极大值抑制的总结
+
 # Code专栏
 这里主要放一些网络结构模型，以及一些代码。光有理论，没有代码可不行。
 
+[nms模块](code专栏/nms.py)这是nms模块的代码实现---基于np的
+
+
+# 感谢星球
 
 ![cv技术指南](https://github.com/mayberpf/cv_learn/blob/main/img/cv.png)
 
