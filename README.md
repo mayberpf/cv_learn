@@ -21,6 +21,8 @@ Note: Many learning materials are learned through Knowledge Planet, welcome to j
 
 [第一章-机器学习](auto_driving专栏/第一章.md)本章主要介绍一些基础的机器学习知识，包括一些线性代数，概率论等。
 
+[车道线检测](auto_driving专栏/车道线检测.md)文章中分享了有关车道线检测的awesome内容
+
 
 ### competition专栏
 本专栏主要介绍我参加的一些比赛，以及一些我在学习比赛的课程记的笔记
@@ -49,11 +51,19 @@ Note: Many learning materials are learned through Knowledge Planet, welcome to j
 
 [underfit_and_overfit](interview_questions专栏/underfit_and_overfitting/第八题.md)关于过拟合和欠拟合的一些问题
 
-[train_data_set](interview_questions专栏/数据集/数据集.md)关于数据集的注意事项和如何选取合适模型
+[数据集](interview_questions专栏/数据集/数据集.md)关于数据集的注意事项和如何选取合适模型
 
 [nms](interview_questions专栏/nms非极大值抑制/nms非极大值抑制.md)关于非极大值抑制的一些问题，主要包括nms的缺陷和一些优化的方法。
 
 [net_design](interview_questions专栏/net_design/net_design.md)关于我们自己在设计改进网络结构时候需要注意的点
+
+[激活函数+loss](interview_questions专栏/激活函数_loss/激活函数_loss.md)关于激活函数和损害函数的一些问题
+
+[cnn_train](interview_questions专栏/cnn_train/cnn_train.md)关于训练过程中需要使用到的优化器学习率和batchsize的问题
+
+[metrics](interview_questions专栏/metrics/metrics.md)关于目标检测的评价指标的问题
+
+[segmentation_small_goals](interview_questions专栏/segmentation_small_goals/small_goals.md)关于小目标分割的问题
 
 ### paper专栏
 本专栏主要是阅读论文之后记得笔记，之前的看论文很少做笔记，大部分论文都是看过了就忘了，所以在这里想做个积累。
@@ -71,6 +81,8 @@ Note: Many learning materials are learned through Knowledge Planet, welcome to j
 
 [transformer](pytorch专栏/transformer.md)主要是用pytorch搭建transformer模型。
 
+[交叉熵损失函数使用](pytorch专栏/交叉熵损失函数使用.md)主要是对BCEloss在pytorch中的使用
+
 
 # section_summary专栏
 本专栏主要针对一些有关深度学习的一些切片点进行总结，比如池化的总结，卷积的总结等等。
@@ -85,6 +97,9 @@ Note: Many learning materials are learned through Knowledge Planet, welcome to j
 
 [nms非极大值抑制](section_summary专栏/nms非极大值抑制/nms.md)关于非极大值抑制的总结
 
+[YOLOv5_dataset](section_summary专栏/YOLOv5_dataset/v5_dataset.md)关于YOLOv5中使用到的数据增强
+
+[YOLOv5_module](section_summary专栏/YOLOv5_module/YOLOv5_module.md)关于YOLOv5中使用的一些模块
 # Code专栏
 这里主要放一些网络结构模型，以及一些代码。光有理论，没有代码可不行。
 
