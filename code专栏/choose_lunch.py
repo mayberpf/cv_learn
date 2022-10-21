@@ -30,7 +30,41 @@ lunchs = {
     # 29:'黄焖鸡',
     # 30:'馄饨',
     }
-import random
-index = random.randint(1,27)
 
-print('今天午餐的选择是：',lunchs[index])
+import random
+i = 0
+# print(list(lunchs.keys()))
+while True:
+
+    if i >=3:
+        print(f'你已经随机了{i+1}次了，建议选择拿度尼！')
+        break
+    if i ==1:
+        index = random.randint(1,list(lunchs.keys())[-1]*2)
+        if index > 27:
+            print("今天午餐的选择是：拿度尼")
+        else:
+            print('今天午餐的选择是：',lunchs[index])
+
+    if i ==2:
+        index = random.randint(1,list(lunchs.keys())[-1]*5)
+        if index > 27:
+            print("今天午餐的选择是：拿度尼")
+        else:
+            print('今天午餐的选择是：',lunchs[index])
+    
+    if i==0:
+        index = random.randint(1,27)
+        print('今天午餐的选择是：',lunchs[index])
+        print('请问您是否选择再次随机？但是这会导致拿度尼被选中的概率达到50%')
+    if i==1:
+        print('请问您是否选择再次随机？但是这会导致拿度尼被选中的概率达到80%')
+    if i==2:
+        print('请问您是否选择再次随机？但是这会导致拿度尼被选中的概率达到100%')
+    willing = input()
+    
+    if willing =='ok':
+        break
+    
+    i+=1
+

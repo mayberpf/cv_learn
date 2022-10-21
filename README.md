@@ -65,6 +65,16 @@ Note: Many learning materials are learned through Knowledge Planet, welcome to j
 
 [segmentation_small_goals](interview_questions专栏/segmentation_small_goals/small_goals.md)关于小目标分割的问题
 
+[cnn_models](interview_questions专栏/cnn_models/cnn_models.md)关于一些经典的cnn模型的说明
+
+[deep_learn_base_1](interview_questions专栏/deep_learn_base1/deep_learn_base1.md)关于深度学习的基础知识1，主要包括卷积池化等定义。
+
+[deep_learn_base_2](interview_questions专栏/deep_learn_base2/deep_learn_base2.md)关于深度学习的基础知识2，主要包括感受野，特征图等定义。
+
+[image_processing_1](interview_questions专栏/image_processing_1/image_processing_1.md)关于图像处理的基础知识1，主要包括噪声等。
+
+[image_processing_2](interview_questions专栏/image_processing_2/image_processing_2.md)关于图像处理的基础知识2，主要包括图像锐化平滑处理等。
+
 ### paper专栏
 本专栏主要是阅读论文之后记得笔记，之前的看论文很少做笔记，大部分论文都是看过了就忘了，所以在这里想做个积累。
 
@@ -83,6 +93,10 @@ Note: Many learning materials are learned through Knowledge Planet, welcome to j
 
 [交叉熵损失函数使用](pytorch专栏/交叉熵损失函数使用.md)主要是对BCEloss在pytorch中的使用
 
+[模型并行_分布式训练](pytorch专栏/模型并行+分布式训练.md)主要针对如何利用pytorch使用进行分布式训练
+
+[训练参数填写](pytorch专栏/训练参数编写.md)主要针对pytorch模型中，参数如何写入
+
 
 # section_summary专栏
 本专栏主要针对一些有关深度学习的一些切片点进行总结，比如池化的总结，卷积的总结等等。
@@ -100,10 +114,17 @@ Note: Many learning materials are learned through Knowledge Planet, welcome to j
 [YOLOv5_dataset](section_summary专栏/YOLOv5_dataset/v5_dataset.md)关于YOLOv5中使用到的数据增强
 
 [YOLOv5_module](section_summary专栏/YOLOv5_module/YOLOv5_module.md)关于YOLOv5中使用的一些模块
+
+[IOU](section_summary专栏/IOU/IOU.md)关于IOU的总结，包括原理及实现代码
+
+
 # Code专栏
 这里主要放一些网络结构模型，以及一些代码。光有理论，没有代码可不行。
 
 [nms模块](code专栏/nms.py)这是nms模块的代码实现---基于np的
+
+[choose_lunch](code专栏/choose_lunch.py)由于每天都纠结中午吃啥，所以写了一个简单的代码
+
 
 
 # 感谢星球
