@@ -1,7 +1,4 @@
 
-from array import array
-from re import I
-
 
 while 0:
     #coding=utf-8
