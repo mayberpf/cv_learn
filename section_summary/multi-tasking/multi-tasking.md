@@ -159,5 +159,251 @@ def postprocess(self, outputs):
 1、使用空洞卷积取代部分stride=2的下采样卷积，从而在不改变feature map宽高的前提下，来扩大感受野。（这一类型的操作，我前段时间也做了，但是效果好像不好。看来要再试试！）
 2、Head结构中的ASPP模块，以不同的空洞采样率并行采样，同时提取不同感受野下的特征，功能类似于多尺度融合。
 3、引入auxiliary block，为后续提供辅助Loss(只在训练时需要，推理时可以无视。)
+接下来就是简单的推理部分，很简单，还是分三部分：预处理，模型处理，后处理。不同类型任务之间，预处理和模型处理基本相同，区别较大只有数据的后处理部分。因此我们这里直接将推理部分的类放进来，正好也可以看下框架。
+```ruby
+class ModelPipline(object):
+    def __init__(self):
+        #进入模型的图片大小：为数据预处理和后处理做准备
+        self.inputs_size=(520,520)
+        #CPU or CUDA：为数据预处理和模型加载做准备
+        self.device=torch.device('cpu')
+        #载入模型结构和模型权重
+        self.model=self.get_model()
+        #标签中的人体index，为数据后处理做准备
+        self.person_id=15
+
+    def predict(self, image):
+        #数据预处理
+        inputs, image_h, image_w=self.preprocess(image)
+        #数据进网路
+        outputs=self.model(inputs)
+        #数据后处理
+        results=self.postprocess(outputs, image_h, image_w)
+        return results
+
+    def get_model(self):
+        #上一节课的内容
+        model = models.segmentation.deeplabv3_resnet50(num_classes=21, pretrained_backbone=False, aux_loss=True)
+        pretrained_state_dict=torch.load('./weights/deeplabv3_resnet50_coco-cd0a2569.pth', map_location=lambda storage, loc: storage)
+        model.load_state_dict(pretrained_state_dict, strict=True)
+        model.to(self.device)
+        model.eval()
+        return model
+
+    def preprocess(self, image):
+        #opencv默认读入是BGR，需要转为RGB，和训练时保持一致
+        image=cv2.cvtColor(image,cv2.COLOR_BGR2RGB)
+        #提取原图大小
+        image_h, image_w=image.shape[:2]
+        #resize成模型输入的大小，和训练时保持一致
+        image=cv2.resize(image, dsize=self.inputs_size)
+        #归一化和标准化，和训练时保持一致
+        inputs=image/255
+        inputs=(inputs-np.array([0.485, 0.456, 0.406]))/np.array([0.229, 0.224, 0.225])
+        ##以下是图像任务的通用处理
+        #(H,W,C) ——> (C,H,W)
+        inputs=inputs.transpose(2,0,1)
+        #(C,H,W) ——> (1,C,H,W)
+        inputs=inputs[np.newaxis,:,:,:]
+        #NumpyArray ——> Tensor
+        inputs=torch.from_numpy(inputs)
+        #dtype float32
+        inputs=inputs.type(torch.float32)
+        #与self.model放在相同硬件上
+        inputs=inputs.to(self.device)
+        return inputs, image_h, image_w
+
+    def postprocess(self, outputs, image_h, image_w):
+        #获取模型输出output
+        outputs=outputs['out']
+        #取softmax得到每个类别的置信度
+        outputs=torch.softmax(outputs,dim=1)
+        #取出目标标签（比如：人体）的那一层置信度
+        outputs=outputs[:,self.person_id:self.person_id+1,:,:]
+        #将结果图resize回原图大小
+        outputs=F.interpolate(outputs, size=(image_h, image_w), mode='bilinear',align_corners=True)
+        #数据类型转换：torch.autograd.Variable ——> torch.Tensor ——> numpy.ndarray
+        mask_person=outputs.data.cpu().numpy().squeeze()
+        return mask_person
+```
+接下来我们简单说一下后处理的部分，在这个例子中我们使用的是deeplabv3。对输入数据进行分类，一共还是拥有20+1个类别。所以我们模型的输出shape为（1，21，520，520），这里1表示batch_size。这里的21表示的是21个类别，也可以理解为通道数，那就是每个通道负责预测一个类别，也就是每个通道都是一个01分类。520，520就是模型输出特征图的宽高。
+接下来就是整体类的调用，然后进行推理。
+```ruby
+if __name__=='__main__':
+    #实例化
+    model_segment=ModelPipline()
+
+    #第一张图
+    image=cv2.imread('./images/person_0.jpg')
+    result=model_segment.predict(image)
+    #可视化结果
+    cv2.imwrite('./demos/person_0_mask.jpg',(result*255).astype(np.uint8))
+    mask=result.copy()
+    mask[mask>=0.5]=255
+    mask[mask<0.5]=0
+    image_mask=np.concatenate([image,mask[:,:,np.newaxis]],axis=2)#这里的拼接完之后的图片的通道数为4
+    cv2.imwrite('./demos/person_0_mask.png',image_mask)#但是这里显示的就是rgb图片在mask掩码下的图片。
+
+    #第二张图
+    image=cv2.imread('./images/person_1.jpg')
+    result=model_segment.predict(image)
+    #可视化结果
+    cv2.imwrite('./demos/person_1_mask.jpg',(result*255).astype(np.uint8))
+    mask=result.copy()
+    mask[mask>=0.5]=255
+    mask[mask<0.5]=0
+    image_mask=np.concatenate([image,mask[:,:,np.newaxis]],axis=2)
+    cv2.imwrite('./demos/person_1_mask.png',image_mask)
+```
+可视化里面有一个地方，那就是保存通道数为4的图片那里。我试过了，只有保存图片才会产生抠图的效果。cv2.imshow()不会显示出那种效果。
 ## 目标检测
+这里在进行目标检测和图像分割时，包括预处理和模型处理实际上和前面的基本没有很大的差别。
+主要差别在于数据后处理。这里以YOLOX为例子
+主要可以分为八个步骤：
+1、将每个anchor的中心点横坐标、中心点纵坐标、框的宽高、转换为anchor的左上角和右下角坐标。
+2、因为在推理过程中只是针对一张图片进行处理，所以将输出维度从(1,8400,85)--->(8400,85)
+3、求出每个anchor分数最高的类别，将该分数和前景分数相乘，作为anchor最终的置信度，和人为设置的阈值进行比较，判断该anchor是否要保留
+4、将anchor的位置信息、置信度信息、类别信息整合在一起
+5、剔除置信度小于阈值的anchor框
+6、如果此时所有的anchor都被剔除了，那么返回None
+7、NMS非极大值抑制。
+8、计算最终保留的anchor框在原图比例下的位置。
+我们将整个代码显示出来：
+```ruby
+import torch
+import torchvision
+import numpy as np
+import cv2
+from models_yolox.yolox_s import YOLOX
+from models_yolox.visualize import vis
+
+
+class ModelPipline(object):
+    def __init__(self):
+        #进入模型的图片大小：为数据预处理和后处理做准备
+        self.inputs_size=(640,640)#(h,w) 
+
+        #CPU or CUDA：为数据预处理和模型加载做准备
+        self.device=torch.device('cpu')
+
+        #载入模型结构和模型权重
+        self.num_classes=80
+        self.model=self.get_model()
+
+        #后处理的阈值
+        self.conf_threshold=0.5
+        self.nms_threshold=0.45
+
+        #标签载入
+        label_names=open('./labels/coco_label.txt','r').readlines()
+        self.label_names=[line.strip('\n') for line in label_names]
+        
+
+    def predict(self, image):
+        #数据预处理
+        inputs, r=self.preprocess(image)
+        #数据进网络
+        outputs=self.model(inputs)
+        #数据后处理
+        results=self.postprocess(outputs, r)
+        return results
+
+    def get_model(self):
+        #Lesson 2 的内容
+        model = YOLOX(num_classes=self.num_classes)
+        pretrained_state_dict=torch.load('./weights/yolox_s_coco.pth.tar', map_location=lambda storage, loc: storage)["model"]
+        model.load_state_dict(pretrained_state_dict, strict=True)
+        model.to(self.device)
+        model.eval()
+        return model
+
+    def preprocess(self, image):
+        # 原图尺寸
+        h, w = image.shape[:2]
+        # 生成一张 w=h=640的mask，数值全是114
+        padded_img = np.ones((self.inputs_size[0], self.inputs_size[1], 3)) * 114.0
+        # 计算原图的长边缩放到640所需要的比例
+        r = min(self.inputs_size[0] / h, self.inputs_size[1] / w)
+        # 对原图做等比例缩放，使得长边=640
+        resized_img = cv2.resize(image, (int(w * r), int(h * r)), interpolation=cv2.INTER_LINEAR).astype(np.float32)
+        # 将缩放后的原图填充到 640×640的mask的左上方
+        padded_img[: int(h * r), : int(w * r)] = resized_img
+        # BGR——>RGB
+        padded_img = padded_img[:, :, ::-1]
+        #归一化和标准化，和训练时保持一致
+        inputs=padded_img/255
+        inputs=(inputs-np.array([0.485, 0.456, 0.406]))/np.array([0.229, 0.224, 0.225])
+        ##以下是图像任务的通用处理
+        #(H,W,C) ——> (C,H,W)
+        inputs=inputs.transpose(2,0,1)
+        #(C,H,W) ——> (1,C,H,W)
+        inputs=inputs[np.newaxis,:,:,:]
+        #NumpyArray ——> Tensor
+        inputs=torch.from_numpy(inputs)
+        #dtype float32
+        inputs=inputs.type(torch.float32)
+        #与self.model放在相同硬件上
+        inputs=inputs.to(self.device)
+        return inputs, r
+
+    def postprocess(self, prediction, r):
+        #prediction.shape=[1,8400,85]，下面先将85中的前4列进行转换，从 xc,yc,w,h 变为 x0,y0,x1,y1
+        box_corner = prediction.new(prediction.shape)
+        box_corner[:, :, 0] = prediction[:, :, 0] - prediction[:, :, 2] / 2
+        box_corner[:, :, 1] = prediction[:, :, 1] - prediction[:, :, 3] / 2
+        box_corner[:, :, 2] = prediction[:, :, 0] + prediction[:, :, 2] / 2
+        box_corner[:, :, 3] = prediction[:, :, 1] + prediction[:, :, 3] / 2
+        prediction[:, :, :4] = box_corner[:, :, :4]
+        #只处理单张图
+        image_pred=prediction[0]
+        #class_conf.shape=[8400,1],求每个anchor在80个类别中的最高分数。class_pred.shape=[8400,1],每个anchor的label index。
+        class_conf, class_pred = torch.max(image_pred[:, 5: 5 + self.num_classes], 1, keepdim=True)
+        conf_score = image_pred[:, 4].unsqueeze(dim=1) * class_conf
+        conf_mask = (conf_score >= self.conf_threshold).squeeze()
+        #detections.shape=[8400,6]，分别是 x0 ,y0, x1, y1, obj_score*class_score, class_label 
+        detections = torch.cat((image_pred[:, :4], conf_score, class_pred.float()), 1)
+        #将obj_score*class_score > conf_thre 筛选出来
+        detections = detections[conf_mask]
+        #通过阈值筛选后，如果没有剩余目标则结束
+        if not detections.size(0):
+            return None
+        #NMS
+        nms_out_index = torchvision.ops.batched_nms(detections[:, :4],detections[:, 4],detections[:, 5],self.nms_threshold)
+        detections = detections[nms_out_index]
+        #把坐标映射回原图
+        detections=detections.data.cpu().numpy()
+        bboxes=(detections[:,:4] / r).astype(np.int64)
+        scores=detections[:,4]
+        labels=detections[:,5].astype(np.int64)
+        return bboxes, scores, labels
+
+        
+
+if __name__=='__main__':
+    model_detect=ModelPipline()
+    label_names=model_detect.label_names
+
+    image=cv2.imread('./images/1.jpg')
+    result=model_detect.predict(image)
+    if result is not None:
+        bboxes, scores, labels = result
+        image=vis(image, bboxes, scores, labels, label_names)
+    cv2.imwrite('./demos/1.jpg',image)
+
+    image=cv2.imread('./images/2.jpg')
+    result=model_detect.predict(image)
+    if result is not None:
+        bboxes, scores, labels = result
+        image=vis(image, bboxes, scores, labels, label_names)
+    cv2.imwrite('./demos/2.jpg',image)
+
+    image=cv2.imread('./images/3.jpg')
+    result=model_detect.predict(image)
+    if result is not None:
+        bboxes, scores, labels = result
+        image=vis(image, bboxes, scores, labels, label_names)
+    cv2.imwrite('./demos/3.jpg',image)
+
+
+```
 
