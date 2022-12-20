@@ -2,7 +2,7 @@
 首先是我们都比较熟悉的VIT的模型图
 @import "transformer.png"
 也就是说：对于一张图片而言，先将其分割为N*N个patch，然后将patch进行Flatten，再通过一个全连接层映射成tokens，对每一个tokens加入位置编码（position embedding），会随机初始化一个tokens，concate到通过图像生成的tokens后，再经过transformer的encoder模块，经过多层encoder后，取出最后的tokens（即随机初始化的tokens），再通过全连接层作为分类网络进行分类。
-####分块
+#### 分块
 目前可以通过两种方式实现分块，一种是直接分割，一种是通过卷积核和步长都为patch大小的卷积来分割。
 ##### 直接分割
 直接分割即把图像直接分割成多块。代码中实现需要使用einops这个库，完成的操作是将(B,C,H,W)的shape调整为(B,(H/P * W/P) , P* P*C)
