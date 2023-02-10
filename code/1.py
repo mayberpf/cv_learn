@@ -13,7 +13,6 @@ while 0:
         cv2.imshow("Video",img)
         if cv2.waitKey(1)&0xFF==ord('q'):
             break
-
 while 1:#交互式标注
     import pylab
     from PIL import Image
