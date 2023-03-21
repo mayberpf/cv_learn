@@ -29,6 +29,7 @@ Note: Many learning materials are learned through Knowledge Planet, welcome to j
 
 [Kaggle-HubMap](competition/HuBMAP/Match_summary.md)该比赛是一个针对图像分割的比赛，关于多种器官的细胞进行分割的比赛。
 
+[model-Fusion](competition/model_Fusion.md)主要讲解在比赛中如何进行模型融合。
 
 ### interview_questions专栏
 本专栏主要是对知识星球中的一些cv岗位面试会问到的问题的解答。其中很多都是我自己的理解，仅供参考，也欢迎大家指正批评。
@@ -131,19 +132,27 @@ Note: Many learning materials are learned through Knowledge Planet, welcome to j
 # section_summary专栏
 本专栏主要针对一些有关深度学习的一些切片点进行总结，比如池化的总结，卷积的总结等等。
 
+[模型部署](section_summary/模型部署/tensorRT简介.md)关于模型部署的教程，主要参考3d视觉工坊课程。
+
 [camera_calibration](section_summary/camera_calibration/camera_calibration.md)关于相机标定的原理和简单实践。
 
 [CNN_vision](section_summary/CNN_vision/神经网络可视化工具.md)关于cnn模型可视化的工具总结，包括卷积核，热力图，网络结构的可视化
 
 [data_transform](section_summary/data_transform/11.md)关于数据增强的总结，除了pytorch自带的，还有一些各种论文中介绍的
 
+[DETR](section_summary/DETR/detr.md)关于使用transformer进行目标检测的大牛论文
+
 [Dilated_Conv](section_summary/Dilated_Conv/Dilated_Conv.md)关于分离卷积的一些知识。
 
 [focal_loss](section_summary/focal_loss/focal_loss.md)关于不平衡损失函数。
 
+[git](section_summary/git/git.md)关于git学习中遇到的一点点问题。
+
 [GPU_cuda](section_summary/GPU_cuda/cuda_1.md)关于GPU编程的入门教程。
 
 [IOU](section_summary/IOU/IOU.md)关于iou函数及其发展。
+
+[linux_command](section_summary/linux_command/linux_command.md)关于linux系统常用的一些命令
 
 [multi-tasking](section_summary/multi-tasking/multi-tasking.md)关于多任务推理代码的书写。
 
@@ -151,13 +160,23 @@ Note: Many learning materials are learned through Knowledge Planet, welcome to j
 
 [nms非极大值抑制](section_summary/nms非极大值抑制/nms.md)关于非极大值抑制的总结
 
+[nni](section_summary/nni/nni.md)这是一个用来做模型自动调参、裁剪模型的工具。
+
 [object_detection](section_summary/objet_detection/obj_detection.md)关于目标检测的总结
+
+[opencv-python](section_summary/opencv-python/opencv-python.md)opencv中常见的命令总结
 
 [pyramid_structure](section_summary/pyramid_structure/金字塔结构.md)关于金字塔网络模型的总结
 
 [pytorch_book](section_summary/pytorch_book/pytorch_book1.md)关于pytorch机器学习从入门到实战的读书笔记
 
 [seg_summary](section_summary/seg_summary/seg_summary.md)关于分割模型的总结
+
+[swin_transformer](section_summary/swin_transformer/swin_transformer.md)关于swin_transformer的讲解
+
+[timm](section_summary/timm/timm.md)这是一个库的教程，在比赛中经常出现，方便模型的调用。
+
+[vit](section_summary/vit/vit.md)这是transformer应用到视觉图像领域的开篇之作。
 
 [YOLOv5_dataset](section_summary/YOLOv5_dataset/v5_dataset.md)关于YOLOv5中使用到的数据增强
 
