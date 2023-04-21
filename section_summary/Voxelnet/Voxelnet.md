@@ -300,3 +300,4 @@ def get_filtered_lidar(lidar, boxes3d=None):
 ```
 可以看出来，voxel_coords就是划分的体素。
 其实后面我还看了网络模型的处理，只能说很蒙，所以这里就暂时写到这里啦。
+所以这里就只能参考网上别人写的文章啦。参考可以在csdn搜一下。因为实际上voxelnet和pointpillar的模型结构包括其他地方有很多都是相同的，所以我准备这里就先做初步了解，然后pointpillar会做超级详细的讲解。
