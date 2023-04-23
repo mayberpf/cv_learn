@@ -105,6 +105,8 @@ Note: Many learning materials are learned through Knowledge Planet, welcome to j
 ### pytorch专栏
 本专栏主要是有关pytorch的学习，主要介绍如何用pytorch搭建甚至优化一个模型。
 
+[参数量统计](pytorch/参数量统计.md)主要针对pytorch对模型运行参数量进行统计的方法
+
 [单机单卡_多机多卡](pytorch/单机多卡_多机多卡.md)主要针对pytorch单机单卡和多机多卡的使用
 
 [混合精度训练](pytorch/混合精度训练.md)主要针对pytorch中混合精度训练的使用
@@ -127,6 +129,8 @@ Note: Many learning materials are learned through Knowledge Planet, welcome to j
 
 [dataset](pytorch/dataset.md)主要是用pytorch写dataset类，进行数据读取
 
+[NMS&IOU](pytorch/NMS&IOU.md)主要是用pytorch进行nms操作和iou计算
+
 [transformer](pytorch/transformer.md)主要是用pytorch搭建transformer模型。
 
 # section_summary专栏
@@ -134,9 +138,15 @@ Note: Many learning materials are learned through Knowledge Planet, welcome to j
 
 [模型部署](section_summary/模型部署/tensorRT简介.md)关于模型部署的教程，主要参考3d视觉工坊课程。
 
+[anchor-free&anchor-base](section_summary/anchor-free&anchor-base/anchor-free&base.md)关于anchor-free的介绍，分析模型为yolox
+
+[BEV简介](section_summary/BEV简介/BEV.md)关于一个BEV感知课程，简单做的笔记。
+
 [camera_calibration](section_summary/camera_calibration/camera_calibration.md)关于相机标定的原理和简单实践。
 
 [CNN_vision](section_summary/CNN_vision/神经网络可视化工具.md)关于cnn模型可视化的工具总结，包括卷积核，热力图，网络结构的可视化
+
+[CONV_intro](section_summary/CONV_introduction/conv_introduction.md)关于各种类型的卷积，普通卷积、dw卷积、稀疏卷积等
 
 [data_transform](section_summary/data_transform/11.md)关于数据增强的总结，除了pytorch自带的，还有一些各种论文中介绍的
 
@@ -164,11 +174,27 @@ Note: Many learning materials are learned through Knowledge Planet, welcome to j
 
 [object_detection](section_summary/objet_detection/obj_detection.md)关于目标检测的总结
 
+[open3d](section_summary/open3d/open3d.md)关于open3d库对点云进行读取可视化等简单操作。
+
 [opencv-python](section_summary/opencv-python/opencv-python.md)opencv中常见的命令总结
+
+[openMMLab](section_summary/OpenMMLab/OpenMMLab.md)mmdetection肯定都知道一点，关于那个的实践。
+
+[point_intro](section_summary/point_cloud_intro/point_cloud.md)关于点云的介绍。
+
+[point_detection](section_summary/point_detection/point_detection.md)关于点云的目标检测方法，一些比较前沿的，简单概述。
+
+[pointnet2](section_summary/pointnet_2/pointnet_2.md)关于点云目标检测模型pointnet++的详细讲解。
+
+[pointnet2](section_summary/Pointpillar/Pointpillar.md)关于点云目标检测模型pointpillar的详细讲解。
 
 [pyramid_structure](section_summary/pyramid_structure/金字塔结构.md)关于金字塔网络模型的总结
 
 [pytorch_book](section_summary/pytorch_book/pytorch_book1.md)关于pytorch机器学习从入门到实战的读书笔记
+
+[ros_detection](section_summary/point_detection/point_detection.md)关于ros封装目标检测模型的教程。以yolox为例子。
+
+[ros笔记](section_summary/ROS笔记/ROS_1.md)关于ros学习过程中的笔记。
 
 [seg_summary](section_summary/seg_summary/seg_summary.md)关于分割模型的总结
 
@@ -177,6 +203,8 @@ Note: Many learning materials are learned through Knowledge Planet, welcome to j
 [timm](section_summary/timm/timm.md)这是一个库的教程，在比赛中经常出现，方便模型的调用。
 
 [vit](section_summary/vit/vit.md)这是transformer应用到视觉图像领域的开篇之作。
+
+[Voxelnet](section_summary/Voxelnet/Voxelnet.md)关于点云目标检测的voxelnet模型详细讲解。
 
 [YOLOv5_dataset](section_summary/YOLOv5_dataset/v5_dataset.md)关于YOLOv5中使用到的数据增强
 

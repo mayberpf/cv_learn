@@ -1,7 +1,4 @@
 # 第一讲
-
-
-
 ```ruby
 mkdir -p test/src#-p 创建工作空间
 catkin_make
@@ -17,7 +14,6 @@ chmod +x hello_p.py
 chmod 777 /home/ubuntu/myblog
 #鱼香ros--->ros安装
 ```
-
 # 第二讲
 launch文件的内容
 ```ruby
@@ -29,7 +25,6 @@ launch文件的内容
 roslaunch 包名 launch文件名
 #launch文件夹一般在功能包文件夹下面
 ```
-
 # 第三讲
 话题通讯
 1、创建发布者
