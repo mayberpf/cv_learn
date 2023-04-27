@@ -4,6 +4,27 @@
 传统方法的泛化行不强，只能用于某些特定场合，不能够广泛应用。
 Unet
 典型的神经网络方法，将输入图片进行编码和解码。其中为了应对一些难以分割的区域，尺度变换大的目标等问题，还设计了对应的特征金字塔、注意力机制等相关技术模块。
+### 难点
+微小物体的分割和分类
+看起来相似的物体，比如猫狗的分类
+背景较为复杂的情况下，如何识别和分离背景
+关于不同角度的问题，如何处理
+### 数据集
+最重要的就是：原始RGB图片和标注好的RGB图片
+### 评价指标
+像素准确度
+平均交并比mIOU
+平均像素准确度
+频率加权交并比
+### 编码器-解码器优缺点
+优点：
+能够提取高层次的特征信息:编码器通过卷积层等操作,能够有效地提取图像的高层次特征信息,这些信息对于图像分类、目标检测、语义分割等任务非常重要。
+能够还原图像细节信息:解码器通过上采样、反卷积等操作,能够将编码器输出的低分辨率特征图还原为原始图像大小的高分辨率特征图,从而恢复出原始图像中的细节信息。
+结构简单:编码器-解码器结构是一种相对简单的网络结构,易于理解和实现,并且具有较好的可解释性。
+缺点：
+由于多次卷积和池化操作,编码器-解码器结构会使得图像信息逐渐丢失,导致一些细节信息无法恢复,例如边缘和纹理等。
+在解码器中使用反卷积和上采样等操作,容易引起信息的混叠和失真,导致图像质量下降。
+编码器-解码器结构的训练需要大量的数据和计算资源,模型参数较多,训练过程较为困难。
 ### FCN
 全连接层的使用，会破坏原有的空间信息，且不再具有局部信息，这对于图像分割这种像素级别的预测任务来说，印象非常大
 整体的网络结构：
@@ -262,3 +283,54 @@ return output
 最大池化和降采样降低了特征映射的分辨率。
 segnet的解码器使用从相应编码器接收到的最大池化索引来执行其输入特征图的非线性上采样。具体来说：解码器使用在相应编码器的最大池化步骤中计算的池化索引来执行非线性上采样。上采样的特征图是稀疏的，然后与卷积层产生密集的特征图。
 ！！！这个方案在后续中并没有人使用。那也就没必要看这个代码了。
+
+### DeepLabv2
+依然是采用编码器解码器的结构，但是采用了新的编码器。DeepLabv2采用ResNet作为编码器，与之前的版本相比，它具备更深的网络结构和更高的性能。
+引入了一个新的ASPP模块，称为空洞空间金字塔池化模块。ASPP模块能够在不同的空洞率下对输入特征进行卷积和池化操作，从而获得更广泛的感受野，然后融合多尺度信息。
+模型结构都是和v1一样的~大啦~
+
+### DeepLabv3
+全新的ASPP结构，相比与v2，做了更新。我真的？哥们儿就逮着这一个模块薅？
+与v2 相比，v3的结构更加复杂，具备更大的参数量。
+设计了multi grid方法，其通过在卷积层中使用不同的空洞率来改变过滤器的感受野，从而增加模型对不同尺度特征的识别能力。实现上，multi-grid方法是通过在某些卷积层的空洞卷积中使用具有不同空洞率的卷积核来实现的。
+看下面那个代码，你就会发现，这个所谓的multi grid还是用在了ASPP中，也就是self.conv2\3\4这个三个空洞卷积给了不同的具体的空洞率，然后去处理相同的特征图，最后进行不同尺度的特征融合。
+哥们儿，真就逮着ASPP可劲儿薅呀？bushi
+```ruby
+class ASPP(nn.Module):
+    def __init__(self, in_channels, out_channels=256, rates=[6, 12, 18]):
+        super(ASPP, self).__init__()
+        self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=1)
+        self.conv2 = nn.Conv2d(in_channels, out_channels, kernel_size=3,
+        padding=rates[0], dilation=rates[0])
+        self.conv3 = nn.Conv2d(in_channels, out_channels, kernel_size=3,
+        padding=rates[1], dilation=rates[1])
+        self.conv4 = nn.Conv2d(in_channels, out_channels, kernel_size=3,
+        padding=rates[2], dilation=rates[2])
+        self.conv5 = nn.Conv2d(out_channels * 5, out_channels, kernel_size=1)
+        self.bn = nn.BatchNorm2d(out_channels)
+        self.dropout = nn.Dropout(0.5)
+    def forward(self, x):
+        conv1 = self.conv1(x)
+        conv2 = self.conv2(x)
+        conv3 = self.conv3(x)
+        conv4 = self.conv4(x)
+        global_features = F.avg_pool2d(x, kernel_size=x.size()[2:])
+        global_features = self.conv1(global_features)
+        global_features = F.interpolate(global_features, size=conv1.size()[2:],
+        mode='bilinear', align_corners=True)
+        x = torch.cat([conv1, conv2, conv3, conv4, global_features], dim=1)
+        x = self.conv5(x)
+        x = self.bn(x)
+        x = F.relu(x)
+```
+### MobileNetV3 & LR-ASPP
+首先看下Mobilenetv3与v2的区别
+第一方面，就是关于block结构，v3在block结构中加入了一个SE模块。在每个倾斜卷积层之后添加了一个SE模块，用于增强特征表示能力。SE模块就是通道注意力机制。
+第二方面也是关于block结构，哥们儿就是在这个通道注意力机制中加入了一个线性瓶颈层，但是看图好像就是一个fc-hard，简单了解下线性瓶颈层。
+线性瓶颈结构，就是末层卷积使用线性激活的瓶颈结构（将 ReLU 函数替换为线性函数）。那么为什么要用线性函数替换 ReLU 呢？有人发现，在使用 MobileNetV1时，DW 部分的卷积核容易失效，即卷积核内数值大部分为零。作者认为这是 ReLU 引起的，在变换过程中，需要将低维信息映射到高维空间，再经 ReLU 重新映射回低维空间。若输出的维度相对较高，则变换过程中信息损失较小；若输出的维度相对较低，则变换过程中信息损失很大。
+第三方面，调整了last stage。作者删除一个瓶颈层的投影和过滤层，进一步降低计算复杂性。
+Lite R-ASPP采用了全局平均池化和SE模块。
+### U2NET
+这个模型一个开始是用来做突出的物体检测的。但是同样是像素级的分类，所以可以用来做分割。
+实际上这个模型就是一个两层嵌套的U型结构，模型的结构看图就能明白。
+### transformer
